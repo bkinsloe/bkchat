@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Validator;
 use App\ChatMessages;
 
 class ChatMessagesController extends Controller
@@ -50,7 +51,7 @@ class ChatMessagesController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Create new chat message.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
@@ -67,16 +68,32 @@ class ChatMessagesController extends Controller
           return response()->json(['error' => $e], 500);
         }
 
+        $validator = Validator::make($request->all(),
+            ['message' => 'required'],
+        );
+
+        if ($validator->fails())
+        {
+          $message = 'Validation Failed';
+          $response = array(
+            'message' => $message,
+            'errors' => $validator->messages(),
+            'meta' => (object)array()
+          );
+          return response()->json($response, 200);
+        }
+
         $user = json_decode($user_json);
         $message = $request->input('message');
 
+        $chat_messages_model = new ChatMessages();
         $insert_array = array(
           'user_id' => $user['id'],
           'chat_id' => $chat_id,
           'message' => $message,
           'created_at' => gmdate('c', time())
         );
-        $chat_message_id = DB::table('chat_messages')->insertGetId($insert_array);
+        $chat_message_id = $chat_messages_model->insert_chat_message($insert_array);
 
         return response()->json(['data' => $chat_message_id], 201);
     }

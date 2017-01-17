@@ -6,22 +6,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Validator;
 use App\Chats;
 
 class ChatsController extends Controller
 {
-
-  public function __construct()
-  {
-    // try {
-    //   // authenticate
-    //   $user_json = JWTAuth::parseToken()->authenticate();
-    //
-    // } catch (JWTException $e) {
-    //     // something went wrong
-    //     return response()->json(['error' => $e], 500);
-    // }
-  }
 
   /**
    * Lists the chats.
@@ -76,6 +65,22 @@ class ChatsController extends Controller
     } catch (JWTException $e) {
         // something went wrong
         return response()->json(['error' => $e], 500);
+    }
+
+    $validator = Validator::make($request->all(),
+        ['name' => 'required'],
+        ['message' => 'required']
+    );
+
+    if ($validator->fails())
+    {
+      $message = 'Validation Failed';
+      $response = array(
+        'message' => $message,
+        'errors' => $validator->messages(),
+        'meta' => (object)array()
+      );
+      return response()->json($response, 200);
     }
 
     $name = $request->input('name');

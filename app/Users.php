@@ -23,6 +23,6 @@ class Users extends Model
 
     public function update_user($user_id, $update_array)
     {
-      DB::table('users')->where('id' => $user['id'])->update($update_array);
+      DB::table('users')->where('id', $user['id'])->update($update_array);
     }
 }

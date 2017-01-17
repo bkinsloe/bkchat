@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
-use Users;
+use Validator;
+use App\Users;
 
 class AuthController extends Controller
 {
@@ -21,6 +22,23 @@ class AuthController extends Controller
       // Get the user's email and hashed password inputs
       $email = $request->input('email');
       $password = $request->input('password');
+
+
+      $validator = Validator::make($request->all(),
+          ['email' => 'required'],
+          ['password' => 'required']
+      );
+
+      if ($validator->fails())
+      {
+        $message = 'Validation Failed';
+        $response = array(
+          'message' => $message,
+          'errors' => $validator->messages(),
+          'meta' => (object)array()
+        );
+        return response()->json($response, 200);
+      }
 
       // Check their credentials in the DB
       $users_model = new Users();
@@ -41,8 +59,14 @@ class AuthController extends Controller
               // something went wrong whilst attempting to encode the token
               return response()->json(['error' => 'could_not_create_token'], 500);
           }
+          $content = array(
+            'data' => array('id' => $user->id, 'name' => $user->name, 'email' => $user->email),
+            'meta' => new stdClass
+          );
           // all good so return the token
-          return response()->json(compact('token'));
+          return response()
+                  ->header('Authorization', 'Bearer ' . compact('token'))
+                  ->json($content);
         } else {
           // email found, incorrect password
           return 'Your password is incorrect';

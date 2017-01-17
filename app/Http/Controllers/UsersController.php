@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Validator;
 use App\Users;
 
 class UsersController extends Controller
@@ -23,44 +24,40 @@ class UsersController extends Controller
      */
     public function store(Request $request)
     {
-      $this->validate($request, [
-        'name' => 'required',
-        'email' => 'required',
-        'password' => 'required',
-        'password_confirmation' => 'required'
-      ]);
+      $validator = Validator::make($request->all(),
+          ['name' => 'required'],
+          ['email' => 'required'],
+          ['password' => 'required|confirmed'],
+          ['password_confirmation' => 'required']
+      );
+
+      if ($validator->fails())
+      {
+        $message = 'Validation Failed';
+        $response = array(
+          'message' => $message,
+          'errors' => $validator->messages(),
+          'meta' => (object)array()
+        );
+        return response()->json($response, 200);
+      }
 
       // post vars
       $name = $request->input('name');
       $email = $request->input('email');
       $password = $request->input('password');
-      $password_confirm = $request->input('password_confirmation');
 
-      // Check password and confirm passwords match
-      if ($password === $password_confirm)
-      {
-        // insert new user
-        $users_model = new Users();
-        $insert_array = array(
-          'name' => $name,
-          'email' => $email,
-          'password' => Hash::make($password)
-        );
-        $user_id = $users_model->insert_user($insert_array);
+      // insert new user
+      $users_model = new Users();
+      $insert_array = array(
+        'name' => $name,
+        'email' => $email,
+        'password' => Hash::make($password)
+      );
+      $user_id = $users_model->insert_user($insert_array);
 
-        $data = array('id' => $user_id, 'name' => $name, 'email' => $email);
-        $meta = array();
-        return response()->json(['data' => $data, 'meta' => $meta], 201);
-      } else {
-        // return error that passwords dont match
-        return response()->json(['data' => $data, 'meta' => $meta], 500);
-      }
-
-      $message = '';
-      $errors = array();
       $data = array('id' => $user_id, 'name' => $name, 'email' => $email);
-      $meta = array();
-
+      $meta = (object)array();
       return response()->json(['data' => $data, 'meta' => $meta], 201);
     }
 
