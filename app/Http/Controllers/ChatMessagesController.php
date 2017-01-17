@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use App\ChatMessages;
 
 class ChatMessagesController extends Controller
 {
@@ -31,11 +32,9 @@ class ChatMessagesController extends Controller
         $page = $request->input('page');
         $limit = $request->input('limit');
 
-        $chat_messages = DB::table('chat_messages')
-                                  ->where('chat_id', $chat_id)
-                                  ->where('user_id', $user['id'])
-                                  ->latest()
-                                  ->get();
+        $chat_messages_model = new ChatMessages();
+
+        $chat_messages = $chat_messages_model->get_chat_messages($chat_id, $user_id);
 
         return response()->json(['data' => $chat_messages], 200);
     }

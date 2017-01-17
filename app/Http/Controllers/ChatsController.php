@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use App\Chats;
 
 class ChatsController extends Controller
 {
@@ -82,20 +83,25 @@ class ChatsController extends Controller
 
     $user = json_decode($user_json, true);
 
+    $chats_model = new Chats();
+    $chat_messages_model = new ChatMessages();
+
+    // insert the new chat
     $insert_array = array(
       'user_id' => $user['id'],
       'name' => $name,
       'created_at' => gmdate('c', time())
     );
-    $chat_id = DB::table('chats')->insertGetId($insert_array);
+    $chat_id = $chats_model->insert_chat($insert_array);
 
+    // Insert the first chat message for the new chat
     $insert_array = array(
       'user_id' => $user['id'],
       'chat_id' => $chat_id,
       'message' => $message,
       'created_at' => gmdate('c', time())
     );
-    $chat_message_id = DB::table('chat_messages')->insertGetId($insert_array);
+    $chat_message_id = $chat_messages_model->insert_chat_message($insert_array);
 
     return response()->json(['data' => $chat_id], 201);
   }
@@ -108,8 +114,11 @@ class ChatsController extends Controller
    */
   public function show($id)
   {
-    $chat = DB::table('chats')->where('id', $id)->first();
-    return $chat;
+    // $chat = DB::table('chats')->where('id', $id)->first();
+    // return $chat;
+    $chats_model = new Chats();
+    $chat = $chats_model->get_chat($id);
+    return json_encode($chat);
   }
 
   /**
@@ -146,16 +155,11 @@ class ChatsController extends Controller
     $user = json_decode($user_json);
 
     // update chat name
-    DB::table('chats')
-          ->where('id', $id)
-          ->where('user_id', $user['id'])
-          ->update(array('name' => $name));
+    $chats_model = new Chats();
+    $chats_model->update_chat($id, $user['id'], $name);
 
     // get updated chat
-    $chat = DB::table('chats')
-                  ->where('id', $id)
-                  ->where('user_id', $user['id'])
-                  ->first();
+    $chat = $chats_model->get_chat($id, $user['id']);
 
     return response()->json(['data' => $chat], 200);
   }

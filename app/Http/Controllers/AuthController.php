@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
-//use Session;
+use Users;
 
 class AuthController extends Controller
 {
@@ -23,9 +23,8 @@ class AuthController extends Controller
       $password = $request->input('password');
 
       // Check their credentials in the DB
-      $user = DB::table('users')
-                ->where('email', $email)
-                ->first();
+      $users_model = new Users();
+      $user = $users_model->get_user($email);
 
       if (!empty($user))
       {
@@ -46,13 +45,13 @@ class AuthController extends Controller
           return response()->json(compact('token'));
         } else {
           // email found, incorrect password
-          return 'password incorrect';
+          return 'Your password is incorrect';
         }
       }
       else
       {
         // no user found
-        return 'nope';
+        return 'No user found with that email address';
       }
   }
 
