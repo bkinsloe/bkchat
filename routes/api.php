@@ -19,6 +19,7 @@ Route::patch('users/current', 'UsersController@update');
 //Route::resource('users.current', 'CurrentUsersController');
 
 Route::resource('chats', 'ChatsController');
+//Route::patch('chats/{chat}', 'ChatsController@update');
 Route::resource('chats.chat_messages', 'ChatMessagesController');
 
 //Route::group(['middleware' => ['api']], function () {

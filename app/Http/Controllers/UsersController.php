@@ -12,11 +12,6 @@ use App\Users;
 
 class UsersController extends Controller
 {
-    public function index(Request $request)
-    {
-      //
-    }
-
     /**
      * Create a new user.
      *

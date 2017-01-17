@@ -45,7 +45,12 @@ class ChatsController extends Controller
     $data = array();
 
     // loop through each chat to get user and last message data
-    foreach($chats as $chat){
+    foreach ($chats as $chat)
+    {
+      // format dates
+      $chat->{'created_at'} = date(DATE_ISO8601, strtotime($chat->created_at));
+      $chat->{'updated_at'} = date(DATE_ISO8601, strtotime($chat->updated_at));
+
       $chat_array = array('id' => $chat->id, 'name' => $chat->name, 'user_id' => $chat->user_id);
       $chat_array['users'] = json_decode(json_encode($chat_messages_model->get_chat_distinct_users($chat->id)), true);
 
@@ -62,17 +67,6 @@ class ChatsController extends Controller
     $pagination = array('current_page' => $page, 'per_page' => $limit, 'page_count' => $page_count, 'total_count' => $total_count);
 
     return response()->json(['data' => $data, 'meta' => array('pagination' => $pagination)], 200);
-  }
-
-  /**
-   * Show the form for creating a new resource.
-   *
-   * @return \Illuminate\Http\Response
-   */
-  public function create()
-  {
-      //
-      return 'create chat';
   }
 
   /**
@@ -120,7 +114,7 @@ class ChatsController extends Controller
     $insert_array = array(
       'user_id' => $user['id'],
       'name' => $name,
-      'created_at' => gmdate('c', time())
+      'created_at' => date('Y-m-d H:i:s')
     );
     $chat_id = $chats_model->insert_chat($insert_array);
 
@@ -129,7 +123,7 @@ class ChatsController extends Controller
       'user_id' => $user['id'],
       'chat_id' => $chat_id,
       'message' => $message,
-      'created_at' => gmdate('c', time())
+      'created_at' => date('Y-m-d H:i:s')
     );
     $chat_message_id = $chat_messages_model->insert_chat_message($insert_array);
 
@@ -152,17 +146,6 @@ class ChatsController extends Controller
   }
 
   /**
-   * Show the form for editing the specified resource.
-   *
-   * @param  int  $id
-   * @return \Illuminate\Http\Response
-   */
-  public function edit($id)
-  {
-      //
-  }
-
-  /**
    * Update the chat name by id.
    *
    * PATCH
@@ -170,7 +153,7 @@ class ChatsController extends Controller
    * @param  int  $id
    * @return \Illuminate\Http\Response
    */
-  public function update(Request $request, $id)
+  public function update($id, Request $request)
   {
     try {
       // authenticate
@@ -182,7 +165,7 @@ class ChatsController extends Controller
     }
 
     $name = $request->input('name');
-    $user = json_decode($user_json);
+    $user = json_decode($user_json, true);
 
     // update chat name
     $chats_model = new Chats();
@@ -192,16 +175,5 @@ class ChatsController extends Controller
     $chat = $chats_model->get_chat($id, $user['id']);
 
     return response()->json(['data' => $chat], 200);
-  }
-
-  /**
-   * Remove the specified resource from storage.
-   *
-   * @param  int  $id
-   * @return \Illuminate\Http\Response
-   */
-  public function destroy($id)
-  {
-      //
   }
 }

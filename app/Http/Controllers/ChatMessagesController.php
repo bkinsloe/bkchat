@@ -42,7 +42,11 @@ class ChatMessagesController extends Controller
         $data = array();
 
         // loop through each chat to get user and last message data
-        foreach($chat_messages as $chat_message){
+        foreach ($chat_messages as $chat_message)
+        {
+          // format dates
+          $chat_message->{'created_at'} = date(DATE_ISO8601, strtotime($chat_message->created_at));
+          $chat_message->{'updated_at'} = date(DATE_ISO8601, strtotime($chat_message->updated_at));
           $user_key = array_search($chat_message->user_id, array_column($chat_users, 'id'));
           $chat_message->{'user'} = $chat_users[$user_key];
           $data[] = $chat_message;
@@ -54,16 +58,6 @@ class ChatMessagesController extends Controller
         $pagination = array('current_page' => $page, 'per_page' => $limit, 'page_count' => $page_count, 'total_count' => $total_count);
 
         return response()->json(['data' => $data, 'meta' => array('pagination', $pagination)], 200);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -99,7 +93,7 @@ class ChatMessagesController extends Controller
           return response()->json($response, 200);
         }
 
-        $user = json_decode($user_json);
+        $user = json_decode($user_json, true);
         $message = $request->input('message');
 
         $chat_messages_model = new ChatMessages();
@@ -107,55 +101,15 @@ class ChatMessagesController extends Controller
           'user_id' => $user['id'],
           'chat_id' => $chat_id,
           'message' => $message,
-          'created_at' => gmdate('c', time())
+          'created_at' => date('Y-m-d H:i:s')
         );
         $chat_message_id = $chat_messages_model->insert_chat_message($insert_array);
 
-        return response()->json(['data' => $chat_message_id], 201);
-    }
+        $data = $insert_array;
+        $data['id'] = $chat_message_id;
+        $data['created_at'] = date(DATE_ISO8601, strtotime($data['created_at'])); // format to iso8601
+        $data['user'] = array('id' => $user['id'], 'name' => $user['name'], 'email' => $user['email']);
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+        return response()->json(['data' => $data, 'meta' => (object)array()], 201);
     }
 }

@@ -93,9 +93,19 @@
             });
 
             $("#logout").on("click", function(){
+              // $.ajax({
+              //   url: "http://localhost:8000/auth/logout",
+              //   method: "GET",
+              //   success: function(msg) {
+              //     console.log(msg);
+              //     //location.reload();
+              //   }
+              // });
               $.ajax({
-                url: "http://localhost:8000/auth/logout",
-                method: "GET",
+                url: "http://localhost:8000/chats/10/chat_messages",
+                method: "POST",
+                data: {message:"bobs newest chat message"},
+                beforeSend: function(xhr){xhr.setRequestHeader('Authorization', 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOjYsImlzcyI6Imh0dHA6XC9cL2xvY2FsaG9zdDo4MDAwXC9hdXRoXC9sb2dpbiIsImlhdCI6MTQ4NDYzNjU4OSwiZXhwIjoxNDg0NjUwOTg5LCJuYmYiOjE0ODQ2MzY1ODksImp0aSI6IjU4YTNkNmQ0YmI4Y2M1Njg2ODljYTc0MTNlNTBmNDVlIn0.Vk3KgoPzH_5anTFLtcNGHDckKVwfuUg1053KY1UB_v0')},
                 success: function(msg) {
                   console.log(msg);
                   //location.reload();
