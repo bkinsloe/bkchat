@@ -23,7 +23,18 @@ class ChatMessages extends Model
                         ->where('chat_id', $chat_id)
                         ->latest()
                         ->first();
-    return $chat;
+    return $chat_message;
+  }
+
+  public function get_chat_distinct_users($chat_id)
+  {
+    $users = DB::table('chat_messages')
+                    ->join('users', 'user_id', '=', 'users.id')
+                    ->select('users.id', 'users.name', 'users.email')
+                    ->where('chat_id', $chat_id)
+                    ->distinct()
+                    ->get();
+    return $users;
   }
 
   public function insert_chat_message($insert_array)

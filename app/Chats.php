@@ -16,6 +16,18 @@ class Chats extends Model {
       return $chat;
     }
 
+    public function get_user_chats($user_id, $limit, $offset)
+    {
+      $chats = DB::table('chats')->where('user_id', $user_id)->offset($offset)->limit($limit)->get();
+      return $chats;
+    }
+
+    public function get_total_user_chat_count($user_id)
+    {
+      $total_count = DB::table('chats')->where('user_id', $user_id)->count();
+      return $total_count;
+    }
+
     public function insert_chat($insert_array)
     {
       $chat_id = DB::table('chats')->insertGetId($insert_array);

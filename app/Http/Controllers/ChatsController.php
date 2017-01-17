@@ -8,6 +8,7 @@ use JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Validator;
 use App\Chats;
+use App\ChatMessages;
 
 class ChatsController extends Controller
 {
@@ -31,12 +32,36 @@ class ChatsController extends Controller
     $page = $request->input('page');
     $limit = $request->input('limit');
 
-    //return json_encode(array('page' => $page, 'limit' => $limit));
+    // calculate the offset
+    $offset = $page * $limit - $limit;
+
     $user = json_decode($user_json, true);
 
-    $total_count = DB::table('chats')->where('user_id', $user['id'])->count();
-    $chats = DB::table('chats')->where('user_id', $user['id'])->get();
-    return response()->json(['data' => $total_count], 200);
+    $chat_messages_model = new ChatMessages();
+    $chats_model = new Chats();
+
+    // Get user chats
+    $chats = $chats_model->get_user_chats($user['id'], $limit, $offset);
+    $data = array();
+
+    // loop through each chat to get user and last message data
+    foreach($chats as $chat){
+      $chat_array = array('id' => $chat->id, 'name' => $chat->name, 'user_id' => $chat->user_id);
+      $chat_array['users'] = json_decode(json_encode($chat_messages_model->get_chat_distinct_users($chat->id)), true);
+
+      $chat_array['last_chat_message'] = $chat_messages_model->get_latest_message($chat->id);
+      $last_message_user_id = $chat_array['last_chat_message']->user_id;
+      $user_key = array_search($last_message_user_id, array_column($chat_array['users'], 'id'));
+      $chat_array['last_chat_message']->{'user'} = $chat_array['users'][$user_key];
+      $data[] = $chat_array;
+    }
+
+    // get pagination data
+    $total_count = $chats_model->get_total_user_chat_count($user['id']);
+    $page_count = ceil($total_count / $limit);
+    $pagination = array('current_page' => $page, 'per_page' => $limit, 'page_count' => $page_count, 'total_count' => $total_count);
+
+    return response()->json(['data' => $data, 'meta' => array('pagination' => $pagination)], 200);
   }
 
   /**

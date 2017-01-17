@@ -56,23 +56,10 @@ class UsersController extends Controller
       );
       $user_id = $users_model->insert_user($insert_array);
 
+      // build response
       $data = array('id' => $user_id, 'name' => $name, 'email' => $email);
       $meta = (object)array();
       return response()->json(['data' => $data, 'meta' => $meta], 201);
-    }
-
-    public function current()
-    {
-      // try {
-      //   // authenticate
-      //   $user_json = JWTAuth::parseToken()->authenticate();
-      //
-      // } catch (JWTException $e) {
-      //   // something went wrong
-      //   return response()->json(['error' => $e], 500);
-      // }
-      //
-      // return response()->json(['data' => $user_json], 200);
     }
 
     // GET /users/current
@@ -87,7 +74,9 @@ class UsersController extends Controller
         return response()->json(['error' => $e], 500);
       }
 
-      return response()->json(['data' => $user_json], 200);
+      $user = json_decode($user_json, true);
+      $data = array('id' => $user['id'], 'name' => $user['name'], 'email' => $user['email']);
+      return response()->json(['data' => $data, 'meta' => (object)array()], 200);
     }
 
     // PATCH /users/current
@@ -102,12 +91,29 @@ class UsersController extends Controller
         return response()->json(['error' => $e], 500);
       }
 
+      $validator = Validator::make($request->all(),
+          ['name' => 'required'],
+          ['email' => 'required'],
+          ['password' => 'required|confirmed'],
+          ['password_confirmation' => 'required']
+      );
+
+      if ($validator->fails())
+      {
+        $message = 'Validation Failed';
+        $response = array(
+          'message' => $message,
+          'errors' => $validator->messages(),
+          'meta' => (object)array()
+        );
+        return response()->json($response, 200);
+      }
+
       $user = json_decode($user_json, true);
 
       $name = $request->input('name');
       $email = $request->input('email');
       $password = $request->input('password');
-      $confirm_password = $request->input('password_confirmation');
 
       // Update the user info
       $users_model = new Users();
@@ -118,6 +124,7 @@ class UsersController extends Controller
       );
       $users_model->update_user($user['id'], $update_array);
 
-      return response()->json(['data' => $user_json], 200);
+      $data = array('id' => $user['id'], 'name' => $name, 'email' => $email);
+      return response()->json(['data' => $data, 'meta' => (object)array()], 200);
     }
 }

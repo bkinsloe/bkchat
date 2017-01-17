@@ -61,12 +61,11 @@ class AuthController extends Controller
           }
           $content = array(
             'data' => array('id' => $user->id, 'name' => $user->name, 'email' => $user->email),
-            'meta' => new stdClass
+            'meta' => (object)array()
           );
           // all good so return the token
-          return response()
-                  ->header('Authorization', 'Bearer ' . compact('token'))
-                  ->json($content);
+          return response(json_encode($content), 200)
+                  ->header('Authorization', 'Bearer ' . $token);
         } else {
           // email found, incorrect password
           return 'Your password is incorrect';
