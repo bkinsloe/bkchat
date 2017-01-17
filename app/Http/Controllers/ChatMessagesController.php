@@ -33,11 +33,27 @@ class ChatMessagesController extends Controller
         $page = $request->input('page');
         $limit = $request->input('limit');
 
+        // calculate the offset
+        $offset = $page * $limit - $limit;
+
         $chat_messages_model = new ChatMessages();
+        $chat_messages = $chat_messages_model->get_chat_messages($chat_id, $limit, $offset);
+        $chat_users = json_decode(json_encode($chat_messages_model->get_chat_distinct_users($chat_id)), true);
+        $data = array();
 
-        $chat_messages = $chat_messages_model->get_chat_messages($chat_id, $user_id);
+        // loop through each chat to get user and last message data
+        foreach($chat_messages as $chat_message){
+          $user_key = array_search($chat_message->user_id, array_column($chat_users, 'id'));
+          $chat_message->{'user'} = $chat_users[$user_key];
+          $data[] = $chat_message;
+        }
 
-        return response()->json(['data' => $chat_messages], 200);
+        // get pagination data
+        $total_count = $chat_messages_model->get_total_chat_message_count($chat_id);
+        $page_count = ceil($total_count / $limit);
+        $pagination = array('current_page' => $page, 'per_page' => $limit, 'page_count' => $page_count, 'total_count' => $total_count);
+
+        return response()->json(['data' => $data, 'meta' => array('pagination', $pagination)], 200);
     }
 
     /**
@@ -69,7 +85,7 @@ class ChatMessagesController extends Controller
         }
 
         $validator = Validator::make($request->all(),
-            ['message' => 'required'],
+            ['message' => 'required']
         );
 
         if ($validator->fails())

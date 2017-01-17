@@ -7,12 +7,13 @@ use DB;
 
 class ChatMessages extends Model
 {
-  public function get_chat_messages($chat_id, $user_id)
+  public function get_chat_messages($chat_id, $limit, $offset)
   {
     $chat_messages = DB::table('chat_messages')
                         ->where('chat_id', $chat_id)
-                        ->where('user_id', $user_id)
                         ->latest()
+                        ->offset($offset)
+                        ->limit($limit)
                         ->get();
     return $chat_messages;
   }
@@ -35,6 +36,12 @@ class ChatMessages extends Model
                     ->distinct()
                     ->get();
     return $users;
+  }
+
+  public function get_total_chat_message_count($chat_id)
+  {
+    $total_count = DB::table('chat_messages')->where('chat_id', $chat_id)->count();
+    return $total_count;
   }
 
   public function insert_chat_message($insert_array)
