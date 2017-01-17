@@ -11,9 +11,15 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::group(['middleware' => ['web']], function () {
+  Route::get('/', function () {
+      return view('test');
+  });
 });
+
+// Route::get('/', function () {
+//     return view('test');
+// });
 
 Route::get('about', function() {
   return json_encode(array('page' => 'About Page'));

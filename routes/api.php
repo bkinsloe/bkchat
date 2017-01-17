@@ -13,8 +13,17 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::resource('users', 'UsersController');
+Route::post('users', 'UsersController@store'); // Change to post for creating user
+Route::get('users/current', 'UsersController@show');
+Route::patch('users/current', 'UsersController@update');
+//Route::resource('users.current', 'CurrentUsersController');
 
 Route::resource('chats', 'ChatsController');
+Route::resource('chats.chat_messages', 'ChatMessagesController');
 
-Route::resource('auth', 'AuthController');
+//Route::group(['middleware' => ['api']], function () {
+  Route::resource('auth/logout', 'AuthController@logout');
+  Route::resource('auth/login', 'AuthController@login'); // Change to post
+//});
+
+//Route::resource('test', 'TestController');
